@@ -25,7 +25,7 @@ function Keywords({ id }: Props) {
           data.data.keywords.length > 0 &&
           data.data.keywords.map(
             (keyword) =>
-              keyword.id !== latestVariable.variables.id && (
+              (!latestVariable?.variables || keyword.id !== latestVariable.variables.id) && (
                 <div
                   key={keyword.id}
                   className="bg-background-90 flex items-center gap-x-2 capitalize text-text-secondary py-1 px-4 rounded-full"

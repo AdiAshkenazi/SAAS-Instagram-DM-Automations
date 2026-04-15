@@ -8,7 +8,15 @@ import { createIntegration, getIntegrations } from "./queries";
 
 export const onOathInstagram = async (strategy: "INSTAGRAM" | "CRM") => {
   if (strategy === "INSTAGRAM") {
-    return redirect(process.env.INSTAGRAM_EMBEDDED_OAUTH_URL as string);
+    const params = new URLSearchParams({
+      enable_fb_login: "0",
+      force_authentication: "1",
+      client_id: process.env.INSTAGRAM_CLIENT_ID as string,
+      redirect_uri: `${process.env.NEXT_PUBLIC_HOST_URL}/callback/instagram`,
+      response_type: "code",
+      scope: "instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments,instagram_business_content_publish",
+    });
+    return redirect(`${process.env.INSTAGRAM_EMBEDDED_OAUTH_URL}?${params.toString()}`);
   }
 };
 

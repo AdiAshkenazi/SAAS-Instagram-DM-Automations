@@ -1,10 +1,13 @@
 "use client";
 
+import { deleteAutomation } from "@/actions/automation";
 import { Button } from "@/components/ui/button";
-import { useMutationDataState } from "@/hooks/use-mutation-data";
+import { useMutationData, useMutationDataState } from "@/hooks/use-mutation-data";
 import { usePath } from "@/hooks/user-nav";
 import { useQueryAutomation } from "@/hooks/user-queries";
 import { cn, getMonth } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import CreateAutomation from "../create-automation";
@@ -40,10 +43,13 @@ function AutomationList({}: Props) {
   return (
     <div className="flex flex-col gap-y-3">
       {optimisticUiData.data!.map((automation) => (
+        <div
+          key={automation.id}
+          className="relative bg-[#1D1D1D] rounded-xl border-[1px] radial--gradient--automations border-[#545454]"
+        >
         <Link
           href={`${pathname}/${automation.id}`}
-          key={automation.id}
-          className="bg-[#1D1D1D] hover:opacity-80 transition duration-100 rounded-xl p-5 border-[1px] radial--gradient--automations flex border-[#545454]"
+          className="hover:opacity-80 transition duration-100 p-5 flex"
         >
           <div className="flex flex-col flex-1 items-start">
             <h2 className="text-xl font-semibold">{automation.name}</h2>
@@ -81,7 +87,7 @@ function AutomationList({}: Props) {
               </div>
             )}
           </div>
-          <div className="flex flex-col justify-between">
+          <div className="flex flex-col justify-between pr-8">
             <p className="capitalize text-sm font-light text-[#9B9CA0]">
               {getMonth(automation.createdAt.getUTCMonth() + 1)}{" "}
               {automation.createdAt.getUTCDate() === 1
@@ -104,8 +110,32 @@ function AutomationList({}: Props) {
             )}
           </div>
         </Link>
+        <DeleteAutomationButton id={automation.id} />
+        </div>
       ))}
     </div>
+  );
+}
+
+function DeleteAutomationButton({ id }: { id: string }) {
+  const queryClient = useQueryClient();
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    queryClient.setQueryData(["user-automation"], (old: any) => {
+      if (!old) return old;
+      return { ...old, data: old.data.filter((a: any) => a.id !== id) };
+    });
+    await deleteAutomation(id);
+  };
+
+  return (
+    <button
+      onClick={handleDelete}
+      className="absolute top-3 right-3 p-1.5 rounded-lg text-[#9B9CA0] hover:text-red-400 hover:bg-red-400/10 transition"
+    >
+      <Trash2 size={16} />
+    </button>
   );
 }
 

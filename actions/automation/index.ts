@@ -8,6 +8,7 @@ import {
   addPosts,
   addTrigger,
   createAutomation,
+  deleteAutomationQuery,
   deleteKeywordsQuery,
   findAutomation,
   getAutomation,
@@ -93,6 +94,24 @@ export const saveListener = async (
   }
 };
 
+export const updateListenerEmailCapture = async (
+  automationId: string,
+  requireEmail: boolean,
+  emailPrompt?: string
+) => {
+  await onCurrentUser();
+  try {
+    const { client } = await import("@/lib/prisma");
+    await client.listener.update({
+      where: { automationId },
+      data: { requireEmail, emailPrompt: emailPrompt || null },
+    });
+    return { status: 200 };
+  } catch (error) {
+    return { status: 500, data: "Failed to update email capture" };
+  }
+};
+
 export const saveTrigger = async (automationId: string, trigger: string[]) => {
   await onCurrentUser();
 
@@ -172,6 +191,18 @@ export const savePosts = async (
     return { status: 404, data: "Failed to create posts" };
   } catch (error) {
     return { status: 500, data: "Failed to save posts" };
+  }
+};
+
+export const deleteAutomation = async (automationId: string) => {
+  await onCurrentUser();
+
+  try {
+    const deleted = await deleteAutomationQuery(automationId);
+    if (deleted) return { status: 200, data: "Automation deleted" };
+    return { status: 404, data: "Failed to delete automation" };
+  } catch (error) {
+    return { status: 500, data: "Failed to delete automation" };
   }
 };
 

@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,6 +10,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─── USER ────────────────────────────────────────────────────────────────────
+
 model User {
   id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   clerkId      String         @unique
@@ -21,8 +20,14 @@ model User {
   lastname     String?
   createdAt    DateTime       @default(now())
   subscription Subscription?
-  integrations Integrations[]
-  automations  Automation[]
+  workspaces   Workspace[]
+
+  // Legacy — kept for backwards compatibility during migration
+  integrations        Integrations[]
+  automations         Automation[]
+  scheduledPosts      ScheduledPost[]
+  commentAutomations  CommentAutomation[]
+  dmSequences         DmSequence[]
 }
 
 model Subscription {
@@ -34,6 +39,65 @@ model Subscription {
   updatedAt  DateTime          @default(now())
   customerId String?           @unique
 }
+
+// ─── WORKSPACE ───────────────────────────────────────────────────────────────
+
+model Workspace {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  description String?
+  logo        String?
+  createdAt   DateTime  @default(now())
+  User        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String    @db.Uuid
+  accounts    Account[]
+  posts       WorkspacePost[]
+}
+
+// ─── ACCOUNT (Instagram or Telegram) ────────────────────────────────────────
+
+model Account {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  platform    PLATFORM
+  name        String
+  avatar      String?
+  token       String      // Instagram access token OR Telegram bot token
+  accountId   String      // Instagram user ID OR Telegram channel ID
+  username    String?     // @handle for display
+  expiresAt   DateTime?   // Instagram tokens expire; Telegram tokens don't
+  createdAt   DateTime    @default(now())
+  Workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String      @db.Uuid
+  postTargets PostTarget[]
+}
+
+// ─── WORKSPACE POSTS (Scheduler) ─────────────────────────────────────────────
+
+model WorkspacePost {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  Workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String        @db.Uuid
+  mediaUrl    String
+  mediaType   MEDIATYPE     @default(IMAGE)
+  caption     String?
+  scheduledAt DateTime
+  createdAt   DateTime      @default(now())
+  targets     PostTarget[]  // which accounts to publish to
+}
+
+model PostTarget {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  WorkspacePost   WorkspacePost @relation(fields: [workspacePostId], references: [id], onDelete: Cascade)
+  workspacePostId String        @db.Uuid
+  Account         Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  accountId       String        @db.Uuid
+  status          POST_STATUS   @default(PENDING)
+  publishedId     String?       // platform post ID after publishing
+  error           String?
+  publishedAt     DateTime?
+}
+
+// ─── LEGACY MODELS (kept as-is) ──────────────────────────────────────────────
 
 model Integrations {
   id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -81,14 +145,37 @@ model Post {
 }
 
 model Listener {
-  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  Automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
-  automationId String     @unique @db.Uuid
-  listener     LISTENERS  @default(MESSAGE)
-  prompt       String
-  commentReply String?
-  dmCount      Int        @default(0)
-  commentCount Int        @default(0)
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  Automation     Automation      @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  automationId   String          @unique @db.Uuid
+  listener       LISTENERS       @default(MESSAGE)
+  prompt         String
+  commentReply   String?
+  dmCount        Int             @default(0)
+  commentCount   Int             @default(0)
+  requireEmail   Boolean         @default(false)
+  emailPrompt    String?         // message to send asking for email
+  capturedEmails CapturedEmail[]
+}
+
+model CapturedEmail {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  Listener     Listener  @relation(fields: [listenerId], references: [id], onDelete: Cascade)
+  listenerId   String    @db.Uuid
+  senderIgId   String
+  email        String
+  capturedAt   DateTime  @default(now())
+}
+
+// Tracks which contacts are mid-email-capture flow (waiting for email reply)
+model EmailCaptureState {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  listenerId   String   @db.Uuid
+  ownerIgId    String
+  senderIgId   String
+  createdAt    DateTime @default(now())
+
+  @@unique([listenerId, senderIgId])
 }
 
 model Trigger {
@@ -104,7 +191,33 @@ model Keyword {
   Automation   Automation? @relation(fields: [automationId], references: [id], onDelete: Cascade)
   automationId String?     @db.Uuid
 
-  @@unique([automationId, word]) //this constraints ensure user cant use the same keyword on multiple automations
+  @@unique([automationId, word])
+}
+
+model ScheduledPost {
+  id          String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String                @db.Uuid
+  User        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mediaUrl    String
+  mediaType   MEDIATYPE             @default(IMAGE)
+  caption     String?
+  scheduledAt DateTime
+  status      SCHEDULED_POST_STATUS @default(PENDING)
+  instagramId String?
+  createdAt   DateTime              @default(now())
+}
+
+// ─── ENUMS ───────────────────────────────────────────────────────────────────
+
+enum PLATFORM {
+  INSTAGRAM
+  TELEGRAM
+}
+
+enum POST_STATUS {
+  PENDING
+  PUBLISHED
+  FAILED
 }
 
 enum SUBSCRIPTION_PLAN {
@@ -120,9 +233,131 @@ enum MEDIATYPE {
   IMAGE
   VIDEO
   CAROSEL_ALBUM
+  REEL
+  STORY
 }
 
 enum LISTENERS {
   SMARTAI
   MESSAGE
+}
+
+enum SCHEDULED_POST_STATUS {
+  PENDING
+  PUBLISHED
+  FAILED
+}
+
+enum COMMENT_REPLY_TYPE {
+  FIXED
+  AI
+}
+
+// ─── DM SEQUENCES ────────────────────────────────────────────────────────────
+
+model DmSequence {
+  id           String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  User         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String               @db.Uuid
+  name         String               @default("Untitled Sequence")
+  active       Boolean              @default(false)
+  // Trigger: FOLLOW | KEYWORD | STORY_REPLY | MENTION | COMMENT
+  triggerType  String               @default("FOLLOW")
+  triggerWord  String?              // keyword match for KEYWORD / COMMENT trigger
+  steps        DmSequenceStep[]
+  enrollments  SequenceEnrollment[]
+  enrollCount  Int                  @default(0)
+  createdAt    DateTime             @default(now())
+}
+
+model DmSequenceStep {
+  id             String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  Sequence       DmSequence  @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  sequenceId     String      @db.Uuid
+  stepOrder      Int
+  message        String
+  delayHours     Int         @default(0)   // hours after previous step (0 = immediate)
+  isEmailCapture Boolean     @default(false)
+  emailPrompt    String?     // "Please reply with your email to receive..."
+}
+
+model SequenceEnrollment {
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  Sequence        DmSequence  @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  sequenceId      String      @db.Uuid
+  contactIgId     String      // follower / commenter IG ID
+  ownerIgId       String      // your IG account ID
+  ownerToken      String      // access token at enrollment time
+  nextStepOrder   Int         @default(0)
+  nextSendAt      DateTime
+  waitingForEmail Boolean     @default(false)
+  capturedEmail   String?
+  completed       Boolean     @default(false)
+  enrolledAt      DateTime    @default(now())
+
+  @@unique([sequenceId, contactIgId])
+}
+
+// ─── FOLLOWER SNAPSHOTS ───────────────────────────────────────────────────────
+
+model FollowerSnapshot {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  // Either a workspace Account ID or "__legacy__" for the integration account
+  accountRef  String
+  ownerUserId String   @db.Uuid
+  count       Int
+  snappedAt   DateTime @default(now())
+
+  @@index([accountRef, snappedAt])
+}
+
+// ─── LINK TRACKER ─────────────────────────────────────────────────────────────
+
+model TrackedLink {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  shortId      String   @unique
+  targetUrl    String
+  label        String?
+  automationId String?  @db.Uuid
+  clickCount   Int      @default(0)
+  userId       String   @db.Uuid
+  createdAt    DateTime @default(now())
+}
+
+// ─── COMMENT AUTOMATION ──────────────────────────────────────────────────────
+
+model CommentAutomation {
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  User        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String             @db.Uuid
+  name        String             @default("Untitled Rule")
+  active      Boolean            @default(false)
+
+  // Optional keyword/hashtag filters (empty = match ALL comments)
+  keywords    CommentKeyword[]
+
+  // Public comment reply
+  replyType   COMMENT_REPLY_TYPE @default(FIXED)
+  replyText   String?            // used when replyType = FIXED
+  aiPrompt    String?            // AI persona/context when replyType = AI
+
+  // Comment-to-DM settings
+  sendDm           Boolean  @default(false)
+  checkFollower    Boolean  @default(false)  // branch on follower status
+  dmMessage        String?  // DM when not checking follower status
+  dmIfFollowing    String?  // DM when commenter IS a follower
+  dmIfNotFollowing String?  // DM when commenter is NOT a follower
+
+  replyCount  Int  @default(0)
+  dmCount     Int  @default(0)
+  createdAt   DateTime           @default(now())
+}
+
+model CommentKeyword {
+  id           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  word         String             // keyword or hashtag (without #)
+  automationId String             @db.Uuid
+  Automation   CommentAutomation  @relation(fields: [automationId], references: [id], onDelete: Cascade)
+
+  @@unique([automationId, word])
 }

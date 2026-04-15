@@ -98,6 +98,22 @@ export const createChatHistory = (
   });
 };
 
+export const getStoryReplyAutomation = async (automationId: string) => {
+  return await client.automation.findUnique({
+    where: { id: automationId },
+    include: {
+      trigger: { where: { type: "STORY_REPLY" } },
+      listener: true,
+      User: {
+        select: {
+          subscription: { select: { plan: true } },
+          integrations: { select: { token: true } },
+        },
+      },
+    },
+  });
+};
+
 export const getKeywordPost = async (postId: string, automationId: string) => {
   return await client.post.findFirst({
     where: {

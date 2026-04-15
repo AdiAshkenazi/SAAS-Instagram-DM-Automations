@@ -6,7 +6,7 @@ export type AutomationsTriggerProps = {
   label: string;
   icon: JSX.Element;
   description: string;
-  type: "COMMENT" | "DM";
+  type: "COMMENT" | "DM" | "STORY_REPLY" | "MENTION";
 };
 export type AutomationTypeProps = {
   id: string;
@@ -30,6 +30,20 @@ export const AUTOMATION_TRIGGERS: AutomationsTriggerProps[] = [
     icon: <TinyInstagram />,
     description: "Select if you want to automate DMs on your profile",
     type: "DM",
+  },
+  {
+    id: v4(),
+    label: "User replies to my story",
+    icon: <TinyInstagram />,
+    description: "Select if you want to auto-reply when someone replies to your story",
+    type: "STORY_REPLY",
+  },
+  {
+    id: v4(),
+    label: "User mentions me in a story",
+    icon: <TinyInstagram />,
+    description: "Auto-DM when someone tags your account in their story",
+    type: "MENTION",
   },
 ];
 

@@ -151,6 +151,14 @@ export const deleteKeywordsQuery = async (automationId: string) => {
   });
 };
 
+export const deleteAutomationQuery = async (automationId: string) => {
+  return await client.automation.delete({
+    where: {
+      id: automationId,
+    },
+  });
+};
+
 export const addPosts = async (
   automationId: string,
   posts: {

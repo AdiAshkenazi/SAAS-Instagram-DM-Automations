@@ -8,22 +8,33 @@ type Props = {
 };
 
 function Items({ page, slug }: Props) {
-  return SIDEBAR_MENU.map((item) => (
-    <Link
-      key={item.id}
-      href={`/dashboard/${slug}/${item.label === "home" ? "/" : item.label}`}
-      className={cn(
-        "capitalize flex gap-x-2 rounded-full p-3",
-        page === item.label && "bg-[#0f0f0f]",
-        page === slug && item.label === "home"
-          ? "bg-[#0f0f0f]"
-          : "text-[#9B9CA0]"
-      )}
-    >
-      {item.icon}
-      {item.label}
-    </Link>
-  ));
+  return (
+    <>
+      {SIDEBAR_MENU.map((item) => (
+        <div key={item.id}>
+          {/* Section header */}
+          {item.section && (
+            <p className="text-[#545454] text-[10px] font-semibold uppercase tracking-widest px-3 pt-4 pb-1">
+              {item.section}
+            </p>
+          )}
+
+          <Link
+            href={`/dashboard/${slug}/${item.label === "home" ? "" : item.label}`}
+            className={cn(
+              "flex items-center gap-x-2.5 rounded-xl px-3 py-2.5 text-sm transition-colors",
+              (page === item.label || (page === slug && item.label === "home"))
+                ? "bg-[#1D1D1D] text-white"
+                : "text-[#9B9CA0] hover:text-white hover:bg-[#1D1D1D]/60"
+            )}
+          >
+            <span className="flex-shrink-0">{item.icon}</span>
+            <span>{item.title}</span>
+          </Link>
+        </div>
+      ))}
+    </>
+  );
 }
 
 export default Items;

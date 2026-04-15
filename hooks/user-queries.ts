@@ -10,6 +10,8 @@ export const useQueryAutomation = () => {
   return useQuery({
     queryKey: ["user-automation"],
     queryFn: getAllAutomation,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 };
 

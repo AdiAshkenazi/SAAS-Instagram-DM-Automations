@@ -94,7 +94,7 @@ export const useTrigger = (id: string) => {
 
   const dispatch: AppDispatch = useDispatch();
 
-  const onSetTrigger = (type: "COMMENT" | "DM") => {
+  const onSetTrigger = (type: "COMMENT" | "DM" | "STORY_REPLY" | "MENTION") => {
     dispatch(TRIGGER({ trigger: { type } }));
   };
 

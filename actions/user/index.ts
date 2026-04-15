@@ -51,6 +51,7 @@ export const onboardUser = async () => {
         data: {
           firstname: found.firstname,
           lastname: found.lastname,
+          email: found.email,
         },
       };
     }

@@ -7,7 +7,9 @@ async function Page({}: Props) {
   const user = await onboardUser();
 
   if (user.status === 200 || user.status === 201) {
-    return redirect(`/dashboard/${user.data?.firstname}${user.data?.lastname}`);
+    const email = (user.data as any)?.email ?? "";
+    const slug = email.split("@")[0] || "user";
+    return redirect(`/dashboard/${slug}`);
   }
 
   return redirect("/sign-in");

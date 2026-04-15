@@ -1,3 +1,3 @@
 import Stripe from "stripe";
 
-export const stripe = new Stripe(process.env.STRIPE_CLIENT_SECRET as string);
+export const stripe = new Stripe(process.env.STRIPE_CLIENT_SECRET || "sk_test_placeholder");

@@ -15,6 +15,7 @@ export const findUser = async (clerkId: string) => {
           token: true,
           expiresAt: true,
           name: true,
+          instagramId: true,
         },
       },
     },
@@ -40,6 +41,7 @@ export const createUser = async (
     select: {
       firstname: true,
       lastname: true,
+      email: true,
     },
   });
 };

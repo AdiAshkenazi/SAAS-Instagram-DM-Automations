@@ -3,7 +3,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type InitialStateTriggerProps = {
   trigger?: {
-    type?: "COMMENT" | "DM";
+    type?: "COMMENT" | "DM" | "STORY_REPLY" | "MENTION";
     keyword?: string;
     types?: string[];
     keywords?: string[];

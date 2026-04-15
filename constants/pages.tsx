@@ -11,7 +11,32 @@ export const PAGE_BREAD_CRUMBS: string[] = [
   "automation",
   "integrations",
   "settings",
+  "workspaces",
+  "scheduler",
+  "workspace-scheduler",
+  "analytics",
+  "comment-automation",
+  "dm-sequences",
+  "link-tracker",
+  "ai-caption",
 ];
+
+// Maps URL label → display title (matches SIDEBAR_MENU titles)
+export const PAGE_TITLES: Record<string, string> = {
+  home: "Dashboard",
+  analytics: "Analytics",
+  automation: "DM Automation",
+  "comment-automation": "Comment Replies",
+  "dm-sequences": "DM Sequences",
+  "workspace-scheduler": "Scheduler",
+  workspaces: "Workspaces",
+  "ai-caption": "AI Captions",
+  "link-tracker": "Link Tracker",
+  integrations: "Integrations",
+  settings: "Settings",
+  contacts: "Contacts",
+  scheduler: "Scheduler",
+};
 
 type Props = {
   [page in string]: React.ReactNode;
