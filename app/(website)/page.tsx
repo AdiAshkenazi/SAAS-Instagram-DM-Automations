@@ -42,11 +42,6 @@ const imageData2 = [
     aspectRatio: "0.94",
     marginTop: "mt-4",
   },
-  {
-    src: "https://marketplace.canva.com/EAFNZ0mRedU/1/0/1600w/canva-lSVdGGDAJIA.jpg",
-    aspectRatio: "0.94",
-    marginTop: "mt-4",
-  },
 ];
 
 const plans = [
@@ -103,13 +98,15 @@ export default function Home() {
                   <div className="flex flex-wrap flex-1 size-full max-md:max-w-full">
                     <div className="flex flex-col flex-1 shrink justify-start pr-20 basis-0 min-w-[240px] max-md:max-w-full pt-4">
                       {/* Logo inside the hero column */}
-                      <Image
-                        src="/Insta flo-logo.png"
-                        alt="Insta Flo"
-                        width={400}
-                        height={133}
-                        className="object-contain self-start"
-                      />
+                      <Link href="/">
+                        <Image
+                          src="/Insta flo-logo.png"
+                          alt="Insta Flo"
+                          width={400}
+                          height={133}
+                          className="object-contain self-start"
+                        />
+                      </Link>
                       <div className="flex flex-col w-full text-white max-md:max-w-full mt-64">
                         <h1 className="text-4xl font-bold leading-tight tracking-tighter text-white sm:text-5xl md:text-6xl lg:text-7xl">
                           Transform Your Instagram Engagement with Automation
