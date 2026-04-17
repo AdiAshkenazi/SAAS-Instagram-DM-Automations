@@ -3,6 +3,7 @@ import FooterLinkGroup from "@/components/home/FooterLinkGroup";
 import ImageCard from "@/components/home/ImageCard";
 import NewsletterForm from "@/components/home/NewsletterForm";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import {
   Card,
   CardContent,
@@ -84,33 +85,31 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <div className="flex flex-col w-full max-md:ml-0 max-md:w-full">
               <div className="flex overflow-hidden flex-col w-full max-md:mt-10 max-md:max-w-full">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 mt-4">
-                    <div className="h-8 w-8 rounded-lg bg-white text-black flex items-center justify-center font-bold">
-                      li
-                    </div>
-                    <span className="text-xl font-semibold text-blue-200">
-                      Slide
-                    </span>
-                  </div>
-                  <nav className="hidden space-x-6 text-sm text-blue-200 md:block">
-                    <Link href="#features">Features</Link>
-                    <Link href="#pricing">Pricing</Link>
-                    <Link href="#about">About</Link>
+                <div className="flex items-center justify-between px-16 max-md:px-5 pt-4">
+                  <nav className="hidden space-x-8 text-sm text-blue-200 md:flex items-center">
+                    <Link href="#features" className="hover:text-white transition">Features</Link>
+                    <Link href="#pricing" className="hover:text-white transition">Pricing</Link>
+                    <Link href="#about" className="hover:text-white transition">About</Link>
                   </nav>
 
                   <Link href="/dashboard">
-                    <Button className="bg-white text-black px-7 font-semibold">
+                    <Button className="bg-white text-black px-7 font-semibold hover:bg-blue-100">
                       Login
                     </Button>
                   </Link>
                 </div>
-                {/* Rest of the component implementation follows with the extracted components */}
-                {/* Features section */}
 
-                <div className="flex overflow-hidden flex-col px-16 mt-28 w-full min-h-[900px] max-md:px-5 max-md:max-w-full">
+                <div className="flex overflow-hidden flex-col px-16 mt-16 w-full min-h-[900px] max-md:px-5 max-md:max-w-full">
                   <div className="flex flex-wrap flex-1 size-full max-md:max-w-full">
-                    <div className="flex flex-col flex-1 shrink justify-center pr-20 basis-0 min-w-[240px] max-md:max-w-full">
+                    <div className="flex flex-col flex-1 shrink justify-start pr-20 basis-0 min-w-[240px] max-md:max-w-full pt-4">
+                      {/* Logo inside the hero column */}
+                      <Image
+                        src="/Insta flo-logo.png"
+                        alt="Insta Flo"
+                        width={400}
+                        height={133}
+                        className="object-contain self-start mb-28"
+                      />
                       <div className="flex flex-col w-full text-white max-md:max-w-full">
                         <h1 className="text-4xl font-bold leading-tight tracking-tighter text-white sm:text-5xl md:text-6xl lg:text-7xl">
                           Transform Your Instagram Engagement with Automation
@@ -142,7 +141,7 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="flex relative flex-1 shrink gap-4 items-start my-auto basis-20 min-h-[900px] min-w-[240px] max-md:max-w-full">
-                      <div className="flex absolute right-0 bottom-0 z-0 flex-col h-[800px] left-[550px] min-w-[240px] w-[360px]">
+                      <div className="flex absolute right-0 top-0 z-0 flex-col h-[800px] left-[550px] min-w-[240px] w-[360px]">
                         {imageData.map((image, index) => (
                           <ImageCard
                             key={`right-${index}`}
@@ -152,7 +151,7 @@ export default function Home() {
                           />
                         ))}
                       </div>
-                      <div className="flex absolute bottom-0 left-[100px] z-0 flex-col h-[1000px] right-[337px] w-[370px]">
+                      <div className="flex absolute top-0 left-[100px] z-0 flex-col h-[1000px] right-[337px] w-[370px]">
                         {imageData2.map((image, index) => (
                           <ImageCard
                             key={`left-${index}`}
