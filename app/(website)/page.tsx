@@ -108,7 +108,7 @@ export default function Home() {
                         alt="Insta Flo"
                         width={400}
                         height={133}
-                        className="object-contain self-start mb-28"
+                        className="object-contain self-start mb-[21rem]"
                       />
                       <div className="flex flex-col w-full text-white max-md:max-w-full">
                         <h1 className="text-4xl font-bold leading-tight tracking-tighter text-white sm:text-5xl md:text-6xl lg:text-7xl">
