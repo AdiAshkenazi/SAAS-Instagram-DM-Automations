@@ -95,11 +95,43 @@ async function publishToTelegram(
   return String(data.result.message_id);
 }
 
+async function publishToFacebook(
+  pageId: string,
+  token: string,
+  mediaUrl: string,
+  caption: string,
+  mediaType: string
+): Promise<string> {
+  const BASE = "https://graph.facebook.com/v19.0";
+  const isVideo = mediaType === "VIDEO" || mediaType === "REEL";
+
+  if (isVideo) {
+    const res = await fetch(`${BASE}/${pageId}/videos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ file_url: mediaUrl, description: caption, access_token: token }),
+    });
+    const data = await res.json();
+    if (!data.id) throw new Error(`Facebook video failed: ${JSON.stringify(data)}`);
+    return data.id;
+  } else {
+    // IMAGE, REEL (image), STORY, CAROSEL_ALBUM — use /photos
+    const res = await fetch(`${BASE}/${pageId}/photos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: mediaUrl, caption, access_token: token }),
+    });
+    const data = await res.json();
+    if (!data.id) throw new Error(`Facebook photo failed: ${JSON.stringify(data)}`);
+    return data.id;
+  }
+}
+
 // ─── Main Cron Handler ────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
-  const secret = req.nextUrl.searchParams.get("secret");
-  if (secret !== process.env.CRON_SECRET) {
+  const auth = req.headers.get("authorization");
+  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -169,6 +201,14 @@ export async function GET(req: NextRequest) {
             publishedId = await publishToTelegram(
               target.Account.token,
               target.Account.accountId,
+              post.mediaUrl,
+              post.caption ?? "",
+              post.mediaType
+            );
+          } else if (target.Account.platform === "FACEBOOK") {
+            publishedId = await publishToFacebook(
+              target.Account.accountId,
+              target.Account.token,
               post.mediaUrl,
               post.caption ?? "",
               post.mediaType

@@ -212,6 +212,7 @@ model ScheduledPost {
 enum PLATFORM {
   INSTAGRAM
   TELEGRAM
+  FACEBOOK
 }
 
 enum POST_STATUS {

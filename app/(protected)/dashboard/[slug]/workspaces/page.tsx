@@ -3,6 +3,8 @@
 import {
   addInstagramAccount,
   addTelegramAccount,
+  addFacebookAccount,
+  linkFacebookPageFromInstagram,
   createWorkspace,
   deleteWorkspace,
   getWorkspaces,
@@ -20,12 +22,13 @@ import {
   Send,
   Trash2,
   CheckCircle2,
+  Facebook,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type Account = {
   id: string;
-  platform: "INSTAGRAM" | "TELEGRAM";
+  platform: "INSTAGRAM" | "TELEGRAM" | "FACEBOOK";
   name: string;
   username: string | null;
   avatar: string | null;
@@ -78,16 +81,21 @@ export default function WorkspacesPage() {
 
   // Add account form state
   const [addingAccountTo, setAddingAccountTo] = useState<string | null>(null);
-  const [accountType, setAccountType] = useState<"INSTAGRAM" | "TELEGRAM">("INSTAGRAM");
+  const [accountType, setAccountType] = useState<"INSTAGRAM" | "TELEGRAM" | "FACEBOOK">("INSTAGRAM");
 
   const [igToken, setIgToken] = useState("");
   const [igName, setIgName] = useState("");
   const [tgBotToken, setTgBotToken] = useState("");
   const [tgChannelId, setTgChannelId] = useState("");
   const [tgName, setTgName] = useState("");
+  const [fbPageToken, setFbPageToken] = useState("");
+  const [fbPageId, setFbPageId] = useState("");
+  const [fbName, setFbName] = useState("");
 
   const [addingAccount, setAddingAccount] = useState(false);
   const [accountError, setAccountError] = useState("");
+  const [linkingFbFor, setLinkingFbFor] = useState<string | null>(null);
+  const [linkFbError, setLinkFbError] = useState<Record<string, string>>({});
 
   const fetchWorkspaces = async () => {
     setLoading(true);
@@ -160,6 +168,41 @@ export default function WorkspacesPage() {
     setAddingAccount(false);
   };
 
+  const handleLinkFacebookPage = async (workspaceId: string, igAccountId: string) => {
+    setLinkingFbFor(igAccountId);
+    setLinkFbError((prev) => ({ ...prev, [igAccountId]: "" }));
+    const result = await linkFacebookPageFromInstagram(workspaceId, igAccountId);
+    if (result.status === 200) {
+      await fetchWorkspaces();
+    } else {
+      setLinkFbError((prev) => ({ ...prev, [igAccountId]: result.data as string }));
+    }
+    setLinkingFbFor(null);
+  };
+
+  const handleAddFacebook = async (workspaceId: string) => {
+    if (!fbPageToken || !fbPageId) return;
+    setAddingAccount(true);
+    setAccountError("");
+
+    const result = await addFacebookAccount(workspaceId, {
+      name: fbName,
+      pageAccessToken: fbPageToken,
+      pageId: fbPageId,
+    });
+
+    if (result.status === 200) {
+      setFbPageToken("");
+      setFbPageId("");
+      setFbName("");
+      setAddingAccountTo(null);
+      await fetchWorkspaces();
+    } else {
+      setAccountError(result.data as string);
+    }
+    setAddingAccount(false);
+  };
+
   const handleAddTelegram = async (workspaceId: string) => {
     if (!tgBotToken || !tgChannelId) return;
     setAddingAccount(true);
@@ -196,6 +239,7 @@ export default function WorkspacesPage() {
 
   const igCount = (ws: Workspace) => ws.accounts.filter((a) => a.platform === "INSTAGRAM").length;
   const tgCount = (ws: Workspace) => ws.accounts.filter((a) => a.platform === "TELEGRAM").length;
+  const fbCount = (ws: Workspace) => ws.accounts.filter((a) => a.platform === "FACEBOOK").length;
 
   return (
     <div className="flex flex-col gap-y-6">
@@ -311,6 +355,11 @@ export default function WorkspacesPage() {
                             <Send size={11} /> {tgCount(workspace)}
                           </span>
                         )}
+                        {fbCount(workspace) > 0 && (
+                          <span className="flex items-center gap-x-1 text-xs text-blue-500">
+                            <Facebook size={11} /> {fbCount(workspace)}
+                          </span>
+                        )}
                         {workspace.accounts.length === 0 && (
                           <span className="text-xs text-[#545454]">No accounts</span>
                         )}
@@ -342,8 +391,8 @@ export default function WorkspacesPage() {
                       <p className="text-[#9B9CA0] text-sm">No accounts connected yet</p>
                     ) : (
                       workspace.accounts.map((account) => (
+                        <div key={account.id} className="flex flex-col">
                         <div
-                          key={account.id}
                           className="flex items-center justify-between bg-background-80 rounded-xl px-4 py-3"
                         >
                           <div className="flex items-center gap-x-3">
@@ -358,11 +407,15 @@ export default function WorkspacesPage() {
                                 className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
                                   account.platform === "INSTAGRAM"
                                     ? "bg-pink-500/20"
+                                    : account.platform === "FACEBOOK"
+                                    ? "bg-blue-600/20"
                                     : "bg-blue-500/20"
                                 }`}
                               >
                                 {account.platform === "INSTAGRAM" ? (
                                   <Instagram size={16} className="text-pink-400" />
+                                ) : account.platform === "FACEBOOK" ? (
+                                  <Facebook size={16} className="text-blue-500" />
                                 ) : (
                                   <Send size={16} className="text-blue-400" />
                                 )}
@@ -380,6 +433,8 @@ export default function WorkspacesPage() {
                                   className={`text-xs px-1.5 py-0.5 rounded-full ${
                                     account.platform === "INSTAGRAM"
                                       ? "bg-pink-500/10 text-pink-400"
+                                      : account.platform === "FACEBOOK"
+                                      ? "bg-blue-600/10 text-blue-500"
                                       : "bg-blue-500/10 text-blue-400"
                                   }`}
                                 >
@@ -405,6 +460,18 @@ export default function WorkspacesPage() {
                             <Trash2 size={14} />
                           </button>
                         </div>
+                        {account.platform === "INSTAGRAM" && (
+                          <div className="ml-4 mt-1 mb-1">
+                            <button
+                              onClick={() => { setAddingAccountTo(workspace.id); setAccountType("FACEBOOK"); }}
+                              className="flex items-center gap-x-1.5 text-xs text-blue-500 hover:text-blue-400 transition"
+                            >
+                              <Facebook size={11} />
+                              Add connected Facebook Page
+                            </button>
+                          </div>
+                        )}
+                        </div>
                       ))
                     )}
                   </div>
@@ -415,7 +482,7 @@ export default function WorkspacesPage() {
                       <p className="text-sm font-medium">Connect Account</p>
 
                       {/* Platform Toggle */}
-                      <div className="flex gap-x-2">
+                      <div className="flex flex-wrap gap-x-2 gap-y-2">
                         <button
                           onClick={() => setAccountType("INSTAGRAM")}
                           className={`flex items-center gap-x-2 px-4 py-2 rounded-full text-sm transition border ${
@@ -425,6 +492,16 @@ export default function WorkspacesPage() {
                           }`}
                         >
                           <Instagram size={14} /> Instagram
+                        </button>
+                        <button
+                          onClick={() => setAccountType("FACEBOOK")}
+                          className={`flex items-center gap-x-2 px-4 py-2 rounded-full text-sm transition border ${
+                            accountType === "FACEBOOK"
+                              ? "bg-blue-600/20 border-blue-600/50 text-blue-500"
+                              : "border-[#545454] text-[#9B9CA0] hover:border-white/40"
+                          }`}
+                        >
+                          <Facebook size={14} /> Facebook
                         </button>
                         <button
                           onClick={() => setAccountType("TELEGRAM")}
@@ -438,7 +515,34 @@ export default function WorkspacesPage() {
                         </button>
                       </div>
 
-                      {accountType === "INSTAGRAM" ? (
+                      {accountType === "FACEBOOK" ? (
+                        <>
+                          <Input
+                            value={fbName}
+                            onChange={(e) => setFbName(e.target.value)}
+                            placeholder="Page display name (optional)"
+                            className="bg-[#1D1D1D] border-[#545454]"
+                          />
+                          <Input
+                            value={fbPageId}
+                            onChange={(e) => setFbPageId(e.target.value)}
+                            placeholder="Facebook Page ID (e.g. 61572148348412)"
+                            className="bg-[#1D1D1D] border-[#545454]"
+                          />
+                          <Input
+                            value={fbPageToken}
+                            onChange={(e) => setFbPageToken(e.target.value)}
+                            placeholder="User Token (from developers.facebook.com/tools/accesstoken)"
+                            className="bg-[#1D1D1D] border-[#545454]"
+                          />
+                          <p className="text-xs text-[#9B9CA0]">
+                            Go to{" "}
+                            <span className="text-blue-400">developers.facebook.com/tools/accesstoken</span>
+                            {" "}→ select your app → copy the <span className="text-blue-400">User Token</span>.
+                            Make sure <code className="text-xs bg-[#2a2a2a] px-1 rounded">pages_manage_posts</code> is enabled.
+                          </p>
+                        </>
+                      ) : accountType === "INSTAGRAM" ? (
                         <>
                           <Input
                             value={igName}
@@ -495,6 +599,8 @@ export default function WorkspacesPage() {
                           onClick={() =>
                             accountType === "INSTAGRAM"
                               ? handleAddInstagram(workspace.id)
+                              : accountType === "FACEBOOK"
+                              ? handleAddFacebook(workspace.id)
                               : handleAddTelegram(workspace.id)
                           }
                           disabled={addingAccount}

@@ -68,10 +68,12 @@ export const updateDmSequence = async (
   id: string,
   data: { name?: string; triggerType?: string; triggerWord?: string | null; active?: boolean }
 ) => {
-  await onCurrentUser();
+  const user = await onCurrentUser();
+  const profile = await findUser(user.id);
+  if (!profile) return { status: 404, data: "User not found" };
   try {
     const updated = await client.dmSequence.update({
-      where: { id },
+      where: { id, userId: profile.id },
       data,
       include: { steps: true, _count: { select: { enrollments: true } } },
     });
@@ -82,9 +84,11 @@ export const updateDmSequence = async (
 };
 
 export const deleteDmSequence = async (id: string) => {
-  await onCurrentUser();
+  const user = await onCurrentUser();
+  const profile = await findUser(user.id);
+  if (!profile) return { status: 404, data: "User not found" };
   try {
-    await client.dmSequence.delete({ where: { id } });
+    await client.dmSequence.delete({ where: { id, userId: profile.id } });
     return { status: 200 };
   } catch (err: any) {
     return { status: 500, data: err.message };
@@ -102,8 +106,12 @@ export const addSequenceStep = async (
     emailPrompt?: string;
   }
 ) => {
-  await onCurrentUser();
+  const user = await onCurrentUser();
+  const profile = await findUser(user.id);
+  if (!profile) return { status: 404, data: "User not found" };
   try {
+    const owned = await client.dmSequence.findFirst({ where: { id: sequenceId, userId: profile.id }, select: { id: true } });
+    if (!owned) return { status: 403, data: "Forbidden" };
     const count = await client.dmSequenceStep.count({ where: { sequenceId } });
     const step = await client.dmSequenceStep.create({
       data: { sequenceId, stepOrder: count, ...data },
@@ -118,8 +126,12 @@ export const updateSequenceStep = async (
   stepId: string,
   data: { message?: string; delayHours?: number; emailPrompt?: string }
 ) => {
-  await onCurrentUser();
+  const user = await onCurrentUser();
+  const profile = await findUser(user.id);
+  if (!profile) return { status: 404, data: "User not found" };
   try {
+    const owned = await client.dmSequenceStep.findFirst({ where: { id: stepId, Sequence: { userId: profile.id } }, select: { id: true } });
+    if (!owned) return { status: 403, data: "Forbidden" };
     const step = await client.dmSequenceStep.update({ where: { id: stepId }, data });
     return { status: 200, data: serializeStep(step) };
   } catch (err: any) {
@@ -128,8 +140,12 @@ export const updateSequenceStep = async (
 };
 
 export const deleteSequenceStep = async (stepId: string, sequenceId: string) => {
-  await onCurrentUser();
+  const user = await onCurrentUser();
+  const profile = await findUser(user.id);
+  if (!profile) return { status: 404, data: "User not found" };
   try {
+    const owned = await client.dmSequenceStep.findFirst({ where: { id: stepId, Sequence: { userId: profile.id } }, select: { id: true } });
+    if (!owned) return { status: 403, data: "Forbidden" };
     await client.dmSequenceStep.delete({ where: { id: stepId } });
     // Re-number remaining steps
     const remaining = await client.dmSequenceStep.findMany({
@@ -151,8 +167,12 @@ export const deleteSequenceStep = async (stepId: string, sequenceId: string) => 
 // ─── Enrollment stats ─────────────────────────────────────────────────────────
 
 export const getSequenceEnrollments = async (sequenceId: string) => {
-  await onCurrentUser();
+  const user = await onCurrentUser();
+  const profile = await findUser(user.id);
+  if (!profile) return { status: 404, data: [] };
   try {
+    const owned = await client.dmSequence.findFirst({ where: { id: sequenceId, userId: profile.id }, select: { id: true } });
+    if (!owned) return { status: 403, data: [] };
     const enrollments = await client.sequenceEnrollment.findMany({
       where: { sequenceId },
       orderBy: { enrolledAt: "desc" },

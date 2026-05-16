@@ -36,11 +36,17 @@ export const getAutomation = async (clerkId: string) => {
   });
 };
 
-export const findAutomation = async (id: string) => {
-  return await client.automation.findUnique({
-    where: {
-      id,
-    },
+export const verifyAutomationOwner = async (automationId: string, clerkId: string) => {
+  const auto = await client.automation.findFirst({
+    where: { id: automationId, User: { clerkId } },
+    select: { id: true },
+  });
+  return !!auto;
+};
+
+export const findAutomation = async (id: string, clerkId?: string) => {
+  return await client.automation.findFirst({
+    where: { id, ...(clerkId ? { User: { clerkId } } : {}) },
     include: {
       keywords: true,
       trigger: true,
@@ -97,7 +103,6 @@ export const addListener = async (
 };
 
 export const addTrigger = async (automationId: string, trigger: string[]) => {
-  console.log("🚀 ~ addTrigger ~ automationId:", automationId);
   if (trigger.length === 2) {
     return await client.automation.update({
       where: {
@@ -143,11 +148,8 @@ export const addKeyWords = async (automationId: string, keywords: string) => {
 };
 
 export const deleteKeywordsQuery = async (automationId: string) => {
-  // console.log("🚀 ~ deleteKeywordsQuery ~ automationId:", automationId);
-  return await client.keyword.delete({
-    where: {
-      id: automationId,
-    },
+  return await client.keyword.deleteMany({
+    where: { automationId },
   });
 };
 

@@ -1,3 +1,6 @@
 import Stripe from "stripe";
 
-export const stripe = new Stripe(process.env.STRIPE_CLIENT_SECRET || "sk_test_placeholder");
+const key = process.env.STRIPE_CLIENT_SECRET;
+if (!key) throw new Error("STRIPE_CLIENT_SECRET is not set");
+
+export const stripe = new Stripe(key);

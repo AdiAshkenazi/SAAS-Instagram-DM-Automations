@@ -28,11 +28,13 @@ async function fetchIgData(igId: string, token: string) {
 
 // Analytics for a workspace account (pass Account.id)
 export const getWorkspaceAccountInsights = async (accountId: string) => {
-  await onCurrentUser();
+  const user = await onCurrentUser();
+  const profile = await findUser(user.id);
+  if (!profile) return { status: 404, data: null };
 
   try {
-    const account = await client.account.findUnique({
-      where: { id: accountId },
+    const account = await client.account.findFirst({
+      where: { id: accountId, Workspace: { userId: profile.id } },
       select: { token: true, accountId: true, platform: true, name: true, username: true, avatar: true, expiresAt: true },
     });
 

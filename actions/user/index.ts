@@ -29,21 +29,15 @@ export const onboardUser = async () => {
         const days = Math.round(time_left / (1000 * 3600 * 24));
 
         if (days < 5) {
-          console.log("refresh");
-
           const refresh = await refreshToken(found.integrations[0].token);
           const today = new Date();
           const expire_date = today.setDate(today.getDate() + 60);
 
-          const update_token = await updateIntegration(
+          await updateIntegration(
             refresh.access_token,
             new Date(expire_date),
             found.integrations[0].id
           );
-
-          if (!update_token) {
-            console.log("Failed to update token");
-          }
         }
       }
       return {
@@ -61,8 +55,6 @@ export const onboardUser = async () => {
       user.lastName!,
       user.emailAddresses[0].emailAddress
     );
-
-    console.log("🧊🧊🧊");
 
     return { status: 201, data: created };
   } catch (error: any) {
@@ -89,7 +81,7 @@ export const onSubscribe = async (session_id: string) => {
   try {
     const session = await stripe.checkout.sessions.retrieve(session_id);
 
-    if (session) {
+    if (session && session.payment_status === "paid" && session.status === "complete") {
       const subscript = await updateSubscription(user.id, {
         customerId: session.customer as string,
         plan: "PRO",

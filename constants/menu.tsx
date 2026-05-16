@@ -31,13 +31,28 @@ export const SIDEBAR_MENU: SIDEBAR_MENU_TYPE[] = [
     icon: <BarChart2 size={20} className="text-white" />,
   },
 
-  // ── Automations ───────────────────────────────────────────────────────────
+  // ── Publish ───────────────────────────────────────────────────────────────
+  {
+    id: uuid(),
+    label: "workspace-scheduler",
+    title: "Scheduler",
+    icon: <CalendarRange size={20} className="text-white" />,
+    section: "Publish",
+  },
+  {
+    id: uuid(),
+    label: "workspaces",
+    title: "Workspaces",
+    icon: <Briefcase size={20} className="text-white" />,
+  },
+
+  // ── Automate ──────────────────────────────────────────────────────────────
   {
     id: uuid(),
     label: "automation",
     title: "DM Automation",
     icon: <AutomationDuoToneWhite />,
-    section: "Automations",
+    section: "Automate",
   },
   {
     id: uuid(),
@@ -50,21 +65,6 @@ export const SIDEBAR_MENU: SIDEBAR_MENU_TYPE[] = [
     label: "dm-sequences",
     title: "DM Sequences",
     icon: <Workflow size={20} className="text-white" />,
-  },
-
-  // ── Publishing ────────────────────────────────────────────────────────────
-  {
-    id: uuid(),
-    label: "workspace-scheduler",
-    title: "Scheduler",
-    icon: <CalendarRange size={20} className="text-white" />,
-    section: "Publishing",
-  },
-  {
-    id: uuid(),
-    label: "workspaces",
-    title: "Workspaces",
-    icon: <Briefcase size={20} className="text-white" />,
   },
 
   // ── Tools ─────────────────────────────────────────────────────────────────

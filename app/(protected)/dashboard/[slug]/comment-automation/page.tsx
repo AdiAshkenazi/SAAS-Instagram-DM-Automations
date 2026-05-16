@@ -625,7 +625,7 @@ export default function CommentAutomationPage() {
           <p>
             When someone comments on your post and their comment matches your keywords, the rule fires in two steps:
             <br />
-            <span className="text-blue-400">Step 1</span> — Reply publicly under their comment (e.g. "Check your DMs!").
+            <span className="text-blue-400">Step 1</span> — Reply publicly under their comment (e.g. &quot;Check your DMs!&quot;).
             <br />
             <span className="text-green-400">Step 2</span> — Optionally send them a private DM. Enable the follower check to send different messages to followers vs non-followers.
           </p>

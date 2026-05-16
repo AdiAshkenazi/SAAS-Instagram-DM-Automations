@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from "crypto";
 import { findAutomation } from "@/actions/automation/queries";
 import {
   createChatHistory,
@@ -332,12 +333,32 @@ async function handleCommentAutomation(
 // ─── Route handlers ───────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
-  const hub = req.nextUrl.searchParams.get("hub.challenge");
-  return new NextResponse(hub);
+  const mode = req.nextUrl.searchParams.get("hub.mode");
+  const token = req.nextUrl.searchParams.get("hub.verify_token");
+  const challenge = req.nextUrl.searchParams.get("hub.challenge");
+
+  if (mode === "subscribe" && token === process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN) {
+    return new NextResponse(challenge);
+  }
+  return new NextResponse("Forbidden", { status: 403 });
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  const signature = req.headers.get("x-hub-signature-256");
+  const rawBody = await req.text();
+
+  if (!signature || !process.env.FACEBOOK_APP_SECRET) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const expected = `sha256=${createHmac("sha256", process.env.FACEBOOK_APP_SECRET).update(rawBody).digest("hex")}`;
+  const sigBuf = Buffer.from(signature);
+  const expBuf = Buffer.from(expected);
+  if (sigBuf.length !== expBuf.length || !timingSafeEqual(sigBuf, expBuf)) {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+  }
+
+  const body = JSON.parse(rawBody);
   let matcher;
 
   try {

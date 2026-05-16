@@ -19,9 +19,8 @@ function Sidebar({ slug }: Props) {
   return (
     <div className="w-[240px] fixed left-0 lg:flex flex-col hidden bottom-0 top-0 m-3 rounded-2xl overflow-hidden border border-[#222222] bg-[#0a0a0a]">
       {/* Logo */}
-      <div className="flex items-center gap-x-2.5 px-5 py-5 border-b border-[#181818]">
+      <div className="flex items-center justify-center px-3 py-4 border-b border-[#181818]">
         <LogoSmall />
-        <span className="text-white font-semibold text-sm tracking-wide">InstaFlow</span>
       </div>
 
       {/* Nav items — scrollable */}

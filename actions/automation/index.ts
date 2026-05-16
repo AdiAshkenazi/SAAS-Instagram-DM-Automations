@@ -13,6 +13,7 @@ import {
   findAutomation,
   getAutomation,
   updateAutomation,
+  verifyAutomationOwner,
 } from "./queries";
 
 export const createAutomations = async (id?: string) => {
@@ -43,10 +44,10 @@ export const getAllAutomation = async () => {
 };
 
 export const getAutomationInfo = async (id: string) => {
-  await onCurrentUser();
+  const user = await onCurrentUser();
 
   try {
-    const automation = await findAutomation(id);
+    const automation = await findAutomation(id, user.id);
 
     if (automation) return { status: 200, data: automation };
 
@@ -64,9 +65,12 @@ export const updateAutomationName = async (
     automation?: string;
   }
 ) => {
-  await onCurrentUser();
+  const user = await onCurrentUser();
 
   try {
+    const owned = await verifyAutomationOwner(automationId, user.id);
+    if (!owned) return { status: 403, data: "Forbidden" };
+
     const update = await updateAutomation(automationId, data);
 
     if (update) return { status: 200, data: "Automation updated" };
@@ -82,9 +86,12 @@ export const saveListener = async (
   prompt: string,
   reply?: string
 ) => {
-  await onCurrentUser();
+  const user = await onCurrentUser();
 
   try {
+    const owned = await verifyAutomationOwner(automationId, user.id);
+    if (!owned) return { status: 403, data: "Forbidden" };
+
     const create = await addListener(automationId, listener, prompt, reply);
 
     if (create) return { status: 200, data: "Listener created" };
@@ -99,8 +106,12 @@ export const updateListenerEmailCapture = async (
   requireEmail: boolean,
   emailPrompt?: string
 ) => {
-  await onCurrentUser();
+  const user = await onCurrentUser();
+
   try {
+    const owned = await verifyAutomationOwner(automationId, user.id);
+    if (!owned) return { status: 403, data: "Forbidden" };
+
     const { client } = await import("@/lib/prisma");
     await client.listener.update({
       where: { automationId },
@@ -113,9 +124,12 @@ export const updateListenerEmailCapture = async (
 };
 
 export const saveTrigger = async (automationId: string, trigger: string[]) => {
-  await onCurrentUser();
+  const user = await onCurrentUser();
 
   try {
+    const owned = await verifyAutomationOwner(automationId, user.id);
+    if (!owned) return { status: 403, data: "Forbidden" };
+
     const create = await addTrigger(automationId, trigger);
 
     if (create) return { status: 200, data: "Trigger created" };
@@ -126,9 +140,12 @@ export const saveTrigger = async (automationId: string, trigger: string[]) => {
 };
 
 export const saveKeywords = async (automationId: string, keywords: string) => {
-  await onCurrentUser();
+  const user = await onCurrentUser();
 
   try {
+    const owned = await verifyAutomationOwner(automationId, user.id);
+    if (!owned) return { status: 403, data: "Forbidden" };
+
     const create = await addKeyWords(automationId, keywords);
 
     if (create) return { status: 200, data: "Keywords created" };
@@ -139,9 +156,12 @@ export const saveKeywords = async (automationId: string, keywords: string) => {
 };
 
 export const deleteKeywords = async (automationId: string) => {
-  await onCurrentUser();
+  const user = await onCurrentUser();
 
   try {
+    const owned = await verifyAutomationOwner(automationId, user.id);
+    if (!owned) return { status: 403, data: "Forbidden" };
+
     const deleted = await deleteKeywordsQuery(automationId);
     if (deleted) {
       return { status: 200, data: "Keywords deleted" };
@@ -164,11 +184,8 @@ export const getProfilePosts = async () => {
     const parsed = await posts.json();
 
     if (parsed) return { status: 200, data: parsed };
-    console.log("🚀 ~ getProfilePosts ~ error");
     return { status: 404 };
   } catch (error: any) {
-    console.log("🚀 ~ getProfilePosts ~ error:", error.message);
-
     return { status: 500 };
   }
 };
@@ -182,9 +199,12 @@ export const savePosts = async (
     mediaType: "IMAGE" | "VIDEO" | "CAROSEL_ALBUM";
   }[]
 ) => {
-  await onCurrentUser();
+  const user = await onCurrentUser();
 
   try {
+    const owned = await verifyAutomationOwner(automationId, user.id);
+    if (!owned) return { status: 403, data: "Forbidden" };
+
     const create = await addPosts(automationId, posts);
 
     if (create) return { status: 200, data: "Posts created" };
@@ -195,9 +215,12 @@ export const savePosts = async (
 };
 
 export const deleteAutomation = async (automationId: string) => {
-  await onCurrentUser();
+  const user = await onCurrentUser();
 
   try {
+    const owned = await verifyAutomationOwner(automationId, user.id);
+    if (!owned) return { status: 403, data: "Forbidden" };
+
     const deleted = await deleteAutomationQuery(automationId);
     if (deleted) return { status: 200, data: "Automation deleted" };
     return { status: 404, data: "Failed to delete automation" };
@@ -207,9 +230,12 @@ export const deleteAutomation = async (automationId: string) => {
 };
 
 export const activateAutomation = async (id: string, status: boolean) => {
-  await onCurrentUser();
+  const user = await onCurrentUser();
 
   try {
+    const owned = await verifyAutomationOwner(id, user.id);
+    if (!owned) return { status: 403, data: "Forbidden" };
+
     const activate = await updateAutomation(id, { active: status });
     if (activate) {
       return {

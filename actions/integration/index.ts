@@ -28,7 +28,6 @@ export const onIntegrate = async (code: string) => {
 
     if (integration && integration.integrations.length === 0) {
       const token = await generateToken(code);
-      console.log("🚀 ~ onIntegrate ~ token:", token);
 
       if (token) {
         const insts_id = await axios.get(

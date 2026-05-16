@@ -13,7 +13,6 @@ export const sendDm = async (
   prompt: string,
   token: string
 ) => {
-  console.log("sending Message");
   return await axios.post(
     `${process.env.INSTAGRAM_BASE_URL}/v21.0/${userId}/messages`,
     {
@@ -39,7 +38,6 @@ export const sendPrivateMessage = async (
   prompt: string,
   token: string
 ) => {
-  console.log("sending Message");
   return await axios.post(
     `${process.env.INSTAGRAM_BASE_URL}/${userId}/messages`,
     {
@@ -81,7 +79,6 @@ export const generateToken = async (code: string) => {
 
   const token = await shortTokenRes.json();
   if (token.permissions.length > 0) {
-    console.log("🚀 ~ generateToken ~ token:", token);
     const long_token = await axios.get(
       `${process.env.INSTAGRAM_BASE_URL}/access_token?grant_type=ig_exchange_token&client_secret=${process.env.INSTAGRAM_CLIENT_SECRET}&access_token=${token.access_token}`
     );
