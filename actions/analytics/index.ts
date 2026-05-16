@@ -42,11 +42,11 @@ export const getWorkspaceAccountInsights = async (accountId: string) => {
       return { status: 400, data: null };
     }
 
-    const { profile, media } = await fetchIgData(account.accountId, account.token);
+    const { profile: igProfile, media } = await fetchIgData(account.accountId, account.token);
 
     return {
       status: 200,
-      data: { profile, media, accountMeta: { name: account.name, username: account.username, avatar: account.avatar, expiresAt: account.expiresAt } },
+      data: { profile: igProfile, media, accountMeta: { name: account.name, username: account.username, avatar: account.avatar, expiresAt: account.expiresAt } },
     };
   } catch (error: any) {
     return { status: 500, data: null };
