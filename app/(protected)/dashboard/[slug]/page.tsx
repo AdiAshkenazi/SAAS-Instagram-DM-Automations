@@ -60,7 +60,7 @@ export default function DashboardPage() {
   ];
 
   const quickLinks = [
-    { label: "New Post", href: `../workspace-scheduler`, icon: <CalendarClock size={16} />, color: "from-[#3352CC] to-[#1C2D70]" },
+    { label: "New Post", href: `/dashboard/${slug}/workspace-scheduler`, icon: <CalendarClock size={16} />, color: "from-[#3352CC] to-[#1C2D70]" },
     { label: "Analytics", href: `../analytics`, icon: <BarChart2 size={16} />, color: "from-purple-600 to-indigo-700" },
     { label: "DM Automation", href: `../automation`, icon: <Zap size={16} />, color: "from-pink-600 to-rose-700" },
   ];
@@ -93,7 +93,7 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 bg-[#1D1D1D] rounded-xl border border-[#545454] p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold">Recent Posts</h2>
-            <Link href={`../workspace-scheduler`} className="text-xs text-blue-400 hover:underline">View all →</Link>
+            <Link href={`/dashboard/${slug}/workspace-scheduler`} className="text-xs text-blue-400 hover:underline">View all →</Link>
           </div>
           {loading ? (
             <div className="flex flex-col gap-y-2">
@@ -103,7 +103,7 @@ export default function DashboardPage() {
             <div className="text-center py-8">
               <CalendarClock size={36} className="mx-auto text-[#545454] mb-2" />
               <p className="text-[#9B9CA0] text-sm">No posts yet</p>
-              <Link href={`../workspace-scheduler`} className="text-blue-400 text-sm hover:underline">Schedule your first post →</Link>
+              <Link href={`/dashboard/${slug}/workspace-scheduler`} className="text-blue-400 text-sm hover:underline">Schedule your first post →</Link>
             </div>
           ) : (
             <div className="flex flex-col gap-y-2">
